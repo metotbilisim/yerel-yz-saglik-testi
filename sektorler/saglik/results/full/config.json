@@ -1,0 +1,27 @@
+{
+  "model": "gemma4:26b",
+  "sektor": "saglik",
+  "num_ctx": 65536,
+  "num_predict_think": 28672,
+  "num_predict_nothink": 8192,
+  "vram_size_vram_gb": 1.14,
+  "model_boyut_gb": 1.14,
+  "gpu_yuzde": 100.0,
+  "vram_nvidia_smi_mb": 20889.0,
+  "ollama_surumu": "0.40.6",
+  "en_uzun_istem": {
+    "gorev": "saglik-4",
+    "token_tahmin": 12282
+  },
+  "denemeler": [
+    {
+      "num_ctx": 65536,
+      "gpu_yuzde": 100.0,
+      "model_boyut_gb": 1.14,
+      "size_vram_gb": 1.14,
+      "nvidia_smi_mb": 20889.0,
+      "hata": null
+    }
+  ],
+  "tarih": "2026-10-24T00:19:18"
+}

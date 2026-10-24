@@ -1,0 +1,301 @@
+The user wants a JSON object containing an array of 40 records based on the provided text messages.
+Each record needs:
+- `id`: The message ID (e.g., "M01").
+- `kategori`: One of the 7 fixed categories ("randevu", "sonuc_sorgu", "fatura_odeme", "sikayet", "rapor_belge_talebi", "ilac_yan_etki", "belirsiz").
+- `birim`: One of the 6 units ("poliklinik_randevu", "laboratuvar", "faturalama", "hasta_haklari", "medikal_kayit", "eczane_ilac_guvenligi") or empty string if category is "belirsiz".
+- `acil`: Boolean (true/false) based on specific medical emergency criteria (chest pain, shortness of breath, unconsciousness/confusion, severe allergic reaction).
+
+I need to analyze each message from M01 to M40.
+
+**M01**: "Geçen hafta konuştuğumuz konu... dönüş bekliyorum."
+- Context: Follow-up on a previous conversation. No specific topic mentioned in the snippet other than general follow-up.
+- Category: Likely "belirsiz" (unclear) or potentially related to "randevu" if it implies waiting for appointment confirmation, but text is vague. However, looking at the instruction: "mesajdan hangi kategoriye girdiği anlaşılamıyor; tahmin yürütme, 'belirsiz' yaz". Since there's no explicit request for appointment, result, bill, complaint, report, or drug side effect, it falls under "belirsiz".
+- Unit: "" (empty).
+- Acil: false.
+
+**M02**: "Bugün 15.00'teki dahiliye randevumu öne alabilir miyiz? Sabahtan beri göğsümde baskı gibi bir ağrı var ve nefes alırken zorlanıyorum."
+- Category: Request for appointment change ("öne alabilir miyiz"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: "göğsümde baskı gibi bir ağrı" (chest pressure/pain), "nefes alırken zorlanıyorum" (shortness of breath). This matches emergency criteria. -> true.
+
+**M03**: "Acil değil ama işyerime sunmam gereken istirahat raporunun bir kopyasına ihtiyacım var."
+- Category: Request for report ("istiharat raporu"). -> "rapor_belge_talebi".
+- Unit: "medikal_kayit" (Medical records usually handle reports).
+- Acil: false.
+
+**M04**: "Okul kaydı için kızımın aşı kartı dökümünü almak istiyorum."
+- Category: Request for document ("aşı kartı dökümü"). -> "rapor_belge_talebi".
+- Unit: "medikal_kayit" (Records).
+- Acil: false.
+
+**M05**: "Patoloji sonucum için 10 iş günü denmişti, bugün 12. gün oldu. Sonuç çıktı mı?"
+- Category: Inquiry about test result ("Patoloji sonucu"). -> "sonuc_sorgu".
+- Unit: "laboratuvar" (Pathology is lab).
+- Acil: false.
+
+**M06**: "Arayan, 14-18 Nisan tarihleri arasındaki yatışına ait yatış belgesi istiyor."
+- Category: Request for discharge certificate ("yatış belgesi"). -> "rapor_belge_talebi".
+- Unit: "medikal_kayit".
+- Acil: false.
+
+**M07**: "Hekim muayene sırasında telefonla konuşmaya devam etti ve sorularıma kısa cevaplar verdi... Dinlenmemiş hissettim."
+- Category: Complaint about service/doctor attitude ("Hekim ... kısa cevaplar verdi"). -> "sikayet".
+- Unit: "hasta_haklari" (Patient rights/complaints).
+- Acil: false.
+
+**M08**: "Kayıt bankosundaki görevlinin yaşlı bir hastaya bağırarak konuştuğuna tanık oldum."
+- Category: Complaint about staff behavior ("görevlinin ... bağırarak konuştuğuna"). -> "sikayet".
+- Unit: "hasta_haklari".
+- Acil: false.
+
+**M09**: "Arayan yakını, hastanın sabah verilen kan tahlili sonuçlarını soruyor. Görüşme sırasında hastanın sabahtan beri uyandırılamadığını... aktardı."
+- Category: Inquiry about test result ("kan tahlili sonuçlarını soruyor"). -> "sonuc_sorgu".
+- Unit: "laboratuvar".
+- Acil: "hastanın ... uyandırılamadığını" (unconscious/unresponsive). This matches unconsciousness criteria. -> true.
+
+**M10**: "Poliklinik bekleme salonundaki klima üç haftadır çalışmıyor."
+- Category: Complaint about environment ("klima ... çalışmıyor"). -> "sikayet".
+- Unit: "hasta_haklari" (Complaints).
+- Acil: false.
+
+**M11**: "Eşimle aynı gün farklı bölümlerde randevumuz var... İkisini birbirine yakın saatlere alabilir miyiz?"
+- Category: Appointment scheduling request ("randevu ... alabilir miyiz"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**M12**: "Yeni başladığım metformin sonrasında üç gündür bulantı ve ishal yaşıyorum."
+- Category: Reporting side effects of medication ("metformin ... yan etkisi"). -> "ilac_yan_etki".
+- Unit: "eczane_ilac_guvenligi" (Pharmacy/Drug safety).
+- Acil: false.
+
+**M13**: "Poliklinik bekleme alanında iki saattir bekletiliyoruz. Az önce yanımızdaki hasta bayıldı, hâlâ yerde yatıyor ve çağırmamıza rağmen kimse gelmedi."
+- Category: Complaint about service/waiting ("bekletiliyoruz", "ilgisizlik"). -> "sikayet".
+- Unit: "hasta_haklari".
+- Acil: "yanımızdaki hasta bayıldı" (patient fainted/unconscious). This matches unconsciousness criteria. -> true.
+
+**M14**: "Merhaba, geçen ay kardiyoloji polikliniğinde muayene olmuştum... Haziranın ilk haftasında sabah saatlerinde uygun bir gün var mı?"
+- Category: Appointment request ("kontrole gelmemi söylemişti... uygun bir gün var mı"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**M15**: "Ocak ayındaki muayene ücretim iki kez tahsil edilmiş görünüyor. Fazla çekimin iadesini talep ediyorum."
+- Category: Billing issue ("ücret ... tahsil edilmiş", "iade"). -> "fatura_odeme".
+- Unit: "faturalama".
+- Acil: false.
+
+**M16**: "12 Mayıs'ta çekilen MR tetkikimin sonucu sisteme düşmüş mü?"
+- Category: Inquiry about test result ("MR tetkikimin sonucu"). -> "sonuc_sorgu".
+- Unit: "laboratuvar".
+- Acil: false.
+
+**M17**: "Babamın iş göremezlik raporu için belge talebinde bulunacaktım... Ancak öğle saatinden beri sözcükleri karıştırıyor, bizi tanımakta zorlanıyor ve elindeki bardağı düşürdü."
+- Category: Request for report ("iş göremezlik raporu"). -> "rapor_belge_talebi".
+- Unit: "medikal_kayit".
+- Acil: "sözcükleri karıştırıyor, bizi tanımakta zorlanıyor" (confusion/disorientation). This matches unconsciousness/confusion criteria. -> true.
+
+**M18**: "Diyabet polikliniğinden yeni hasta randevusu almak istiyorum."
+- Category: Appointment request ("yeni hasta randevusu"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**M19**: "Dosyam hakkında bilgi almak istiyorum... Ne için yazdığımı ben de tam bilmiyorum, sonuç mu randevu mu karışıyor."
+- Category: Inquiry about file ("Dosyam hakkında bilgi"). This is vague but implies medical records inquiry. However, the categories are specific. It's not explicitly a report request or result query. It asks for info about the file. Is it "rapor_belge_talebi" (file info)? Or "belirsiz"? The prompt says "Dosyam hakkında bilgi almak istiyorum". This usually falls under medical records. Let's look at available units: "medikal_kayit". Category list: "randevu", "sonuc_sorgu", "fatura_odeme", "sikayet", "rapor_belge_talebi", "ilac_yan_etki", "belirsiz". Since it asks for info about the file, it's closest to document request ("rapor_belge_talebi"). However, if the intent is unclear ("karışıyor"), maybe "belirsiz"? But usually, asking about a file implies requesting records. Let's lean towards "rapor_belge_talebi" as it involves medical records/documents. Wait, M03 was specifically for a report copy. M19 says "Dosyam hakkında bilgi". This is often handled by Medical Records unit. Category: "rapor_belge_talebi". Unit: "medikal_kayit".
+- Acil: false.
+
+**M20**: "Oğlumun kulak burun boğaz muayenesi için ilk boş randevuyu öğrenmek istiyorum."
+- Category: Appointment inquiry ("ilk boş randevuyu"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**M21**: "Randevu saatimden 90 dakika sonra içeri alındım."
+- Category: Complaint about service/process ("Randevu saatinin bir anlamı yok"). -> "sikayet".
+- Unit: "hasta_haklari".
+- Acil: false.
+
+**M22**: "Yarın saat 14.30'daki göz muayenesi randevuma gelemeyeceğim. İptal edip..."
+- Category: Appointment cancellation/change ("İptal edip"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**M23**: "Arayan, otoparkın hasta yakınlarına yetmediğini... İlgili yetkiliyle görüşmek istiyor."
+- Category: Complaint about facility ("otopark ... yetmediğini"). -> "sikayet".
+- Unit: "hasta_haklari".
+- Acil: false.
+
+**M24**: "Özel sağlık sigortamın provizyon onayı geldi fakat faturada tutarın tamamı bana yansıtılmış."
+- Category: Billing/Insurance issue ("faturada tutar", "sigorta payı"). -> "fatura_odeme".
+- Unit: "faturalama".
+- Acil: false.
+
+**M25**: "Eşim yeni başladığı ilaçtan sonra yatamaz oldu... dudakları morarmış gibi görünüyor."
+- Category: Reporting side effects ("ilaçtan sonra ... yan etkisi olabilir mi"). -> "ilac_yan_etki".
+- Unit: "eczane_ilac_guvenligi".
+- Acil: "dudakları morarmış gibi görünüyor" (lips turning blue/purple - cyanosis). This is a sign of severe distress/hypoxia. Also "soluk almak için duruyor" (stopping to breathe). Matches shortness of breath/cyanosis criteria. -> true.
+
+**M26**: "Dün sabah kan tahlili verdim. Sonuçlar sistemde ne zaman görünür?"
+- Category: Inquiry about test result ("kan tahlili ... sonuçlar"). -> "sonuc_sorgu".
+- Unit: "laboratuvar".
+- Acil: false.
+
+**M27**: "Arayan ismini söylemedi, 'o iş için' bilgi almak istediğini belirtti ve hangi iş olduğunu açıklamadan hat kesildi."
+- Category: Unclear intent ("hangi iş olduğunu açıklamadan"). -> "belirsiz".
+- Unit: "".
+- Acil: false.
+
+**M28**: "Tansiyon ilacım ramipril'e başladığımdan beri kuru bir öksürüğüm var."
+- Category: Reporting side effects ("ramipril ... yan etki"). -> "ilac_yan_etki".
+- Unit: "eczane_ilac_guvenligi".
+- Acil: false.
+
+**M29**: "Geçen ay acil servise başvurmuştum. O ziyarete ait faturada laboratuvar kalemi iki kez yazılmış gibi görünüyor, kontrol eder misiniz?"
+- Category: Billing inquiry ("faturada ... kontrol eder misiniz"). -> "fatura_odeme".
+- Unit: "faturalama".
+- Acil: false. (Note: mentions "acil servise başvurmuştum" but the current request is about billing, not an emergency state).
+
+**M30**: "Antibiyotiğin ilk dozunu içtikten yarım saat sonra dudaklarım ve dilim şişti, vücudumda kızarıklıklar çıktı, yutkunmakta zorlanıyorum."
+- Category: Reporting side effects ("Antibiyotik ... yan etki"). -> "ilac_yan_etki".
+- Unit: "eczane_ilac_guvenligi".
+- Acil: "dudaklarım ve dilim şişti" (swelling of lips and tongue), "yutkunmakta zorlanıyorum" (difficulty swallowing). Matches severe allergic reaction criteria. -> true.
+
+**M31**: "Yeğenimin durumu için yazıyorum. Ne yapmam gerektiğini öğrenmek istiyorum."
+- Category: Unclear intent ("Yeğenimin durumu", vague request). -> "belirsiz".
+- Unit: "".
+- Acil: false.
+
+**M32**: "Sürücü belgesi yenileme için sağlık raporu gerekiyor."
+- Category: Request for document ("sağlık raporu"). -> "rapor_belge_talebi".
+- Unit: "medikal_kayit".
+- Acil: false.
+
+**M33**: "Arayan, babasının idrar tahlili sonucunda 'kontrol öneriliyor' notu çıktığını söylüyor ve bunun ne anlama geldiğini soruyor."
+- Category: Inquiry about test result ("idrar tahlili sonucu ... ne anlama geliyor"). -> "sonuc_sorgu".
+- Unit: "laboratuvar".
+- Acil: false.
+
+**M34**: "Geçirdiğim ameliyata ait epikriz belgesinin bir kopyasına ihtiyacım var."
+- Category: Request for document ("epikriz belgesi"). -> "rapor_belge_talebi".
+- Unit: "medikal_kayit".
+- Acil: false.
+
+**M35**: "Arayan, çocuğuna yazılan şurubu içirdikten sonra kolunda hafif bir döküntü çıktığını bildiriyor."
+- Category: Reporting side effects ("şurubu ... döküntü"). -> "ilac_yan_etki".
+- Unit: "eczane_ilac_guvenligi".
+- Acil: false. (Mild rash, breathing normal).
+
+**M36**: "Arayan, ameliyat öncesi fark ücretini taksitlendirip taksitlendiremeyeceğini soruyor."
+- Category: Billing inquiry ("fark ücretini taksitlendirip"). -> "fatura_odeme".
+- Unit: "faturalama".
+- Acil: false.
+
+**M37**: "Arayan, cumartesi günü poliklinik hizmeti verilip verilmediğini soruyor."
+- Category: Inquiry about service availability (often related to appointment or general info). Since it asks about service hours and wants an appointment ("cilt hastalıkları için randevu almak istiyor"), it's an appointment inquiry. -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**M38**: "Kadın doğum polikliniğinde verdiğim hormon tahlillerinin sonuçları kişisel sağlık kaydıma yansımadı."
+- Category: Inquiry about test result ("hormon tahlillerinin sonuçları"). -> "sonuc_sorgu".
+- Unit: "laboratuvar".
+- Acil: false.
+
+**M39**: "Ödemeyi yaptım ama fatura bireysel adıma kesilmiş."
+- Category: Billing issue ("fatura ... kesilmiş", "yeniden düzenlenmesi"). -> "fatura_odeme".
+- Unit: "faturalama".
+- Acil: false.
+
+**M40**: "Arayan kişi annesi için ortopedi randevusu istiyor."
+- Category: Appointment request ("ortopedi randevusu"). -> "randevu".
+- Unit: "poliklinik_randevu".
+- Acil: false.
+
+**Reviewing Emergency Criteria:**
+1. Chest pain/pressure (göğüs ağrısı/baskı).
+2. Shortness of breath (nefes darlığı/güçlük).
+3. Unconsciousness/confusion (bilinç değişikliği, uyandırılamama, bayılma, tanıma bozulması).
+4. Severe allergic reaction (lips/tongue swelling, difficulty swallowing/breathing with rash).
+
+**Re-evaluating specific messages for Acil:**
+- M02: Chest pain + shortness of breath -> true.
+- M09: Patient unresponsive/unconscious ("uyandırılamadığını") -> true.
+- M13: Patient fainted ("bayıldı") -> true.
+- M17: Confusion/disorientation ("sözcükleri karıştırıyor, bizi tanımakta zorlanıyor") -> true.
+- M25: Cyanosis ("dudakları morarmış"), breathing difficulty ("soluk almak için duruyor"). This is severe respiratory distress/hypoxia. -> true.
+- M30: Swelling of lips/tongue + difficulty swallowing -> true (Severe allergic reaction).
+
+**Re-evaluating Categories:**
+- "rapor_belge_talebi": Includes report, discharge certificate, vaccination card copy, medical report for license, epikriz.
+- "sonuc_sorgu": Test results ready? Where to get them? Meaning of result note.
+- "randevu": Booking, changing, cancelling, scheduling same day.
+- "fatura_odeme": Billing errors, refunds, insurance, payment methods.
+- "sikayet": Complaints about staff, environment, waiting times, parking, etc.
+- "ilac_yan_etki": Side effects of drugs (metformin, ramipril, antibiotic, syrup).
+- "belirsiz": Vague requests, unclear intent.
+
+**Re-evaluating Units:**
+- "poliklinik_randevu": Appointments.
+- "laboratuvar": Test results.
+- "faturalama": Billing/Insurance.
+- "hasta_haklari": Complaints.
+- "medikal_kayit": Reports, records, files.
+- "eczane_ilac_guvenligi": Drug safety/side effects.
+
+**Detailed check on M01**: "Geçen hafta konuştuğumuz konu... dönüş bekliyorum." No specific category keywords. It's a general follow-up. -> belirsiz, "".
+**Detailed check on M19**: "Dosyam hakkında bilgi almak istiyorum... sonuç mu randevu mu karışıyor." Asking about file info. Usually medical records unit handles this. Category: rapor_belge_talebi (file info). Unit: medikal_kayit.
+**Detailed check on M27**: "o iş için" bilgi, hat kesildi. Vague. -> belirsiz, "".
+**Detailed check on M31**: "Yeğenimin durumu için yazıyorum." Vague. -> belirsiz, "".
+
+Let's construct the JSON.
+
+M01: id="M01", kategori="belirsiz", birim="", acil=false
+M02: id="M02", kategori="randevu", birim="poliklinik_randevu", acil=true (chest pain, SOB)
+M03: id="M03", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=false
+M04: id="M04", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=false (Vaccination card copy)
+M05: id="M05", kategori="sonuc_sorgu", birim="laboratuvar", acil=false
+M06: id="M06", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=false (Discharge certificate)
+M07: id="M07", kategori="sikayet", birim="hasta_haklari", acil=false
+M08: id="M08", kategori="sikayet", birim="hasta_haklari", acil=false
+M09: id="M09", kategori="sonuc_sorgu", birim="laboratuvar", acil=true (unconscious)
+M10: id="M10", kategori="sikayet", birim="hasta_haklari", acil=false
+M11: id="M11", kategori="randevu", birim="poliklinik_randevu", acil=false
+M12: id="M12", kategori="ilac_yan_etki", birim="eczane_ilac_guvenligi", acil=false
+M13: id="M13", kategori="sikayet", birim="hasta_haklari", acil=true (fainted)
+M14: id="M14", kategori="randevu", birim="poliklinik_randevu", acil=false
+M15: id="M15", kategori="fatura_odeme", birim="faturalama", acil=false
+M16: id="M16", kategori="sonuc_sorgu", birim="laboratuvar", acil=false
+M17: id="M17", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=true (confusion)
+M18: id="M18", kategori="randevu", birim="poliklinik_randevu", acil=false
+M19: id="M19", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=false (File info)
+M20: id="M20", kategori="randevu", birim="poliklinik_randevu", acil=false
+M21: id="M21", kategori="sikayet", birim="hasta_haklari", acil=false
+M22: id="M22", kategori="randevu", birim="poliklinik_randevu", acil=false
+M23: id="M23", kategori="sikayet", birim="hasta_haklari", acil=false
+M24: id="M24", kategori="fatura_odeme", birim="faturalama", acil=false
+M25: id="M25", kategori="ilac_yan_etki", birim="eczane_ilac_guvenligi", acil=true (cyanosis/breathing difficulty)
+M26: id="M26", kategori="sonuc_sorgu", birim="laboratuvar", acil=false
+M27: id="M27", kategori="belirsiz", birim="", acil=false
+M28: id="M28", kategori="ilac_yan_etki", birim="eczane_ilac_guvenligi", acil=false
+M29: id="M29", kategori="fatura_odeme", birim="faturalama", acil=false
+M30: id="M30", kategori="ilac_yan_etki", birim="eczane_ilac_guvenligi", acil=true (swelling/difficulty swallowing)
+M31: id="M31", kategori="belirsiz", birim="", acil=false
+M32: id="M32", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=false
+M33: id="M33", kategori="sonuc_sorgu", birim="laboratuvar", acil=false
+M34: id="M34", kategori="rapor_belge_talebi", birim="medikal_kayit", acil=false
+M35: id="M35", kategori="ilac_yan_etki", birim="eczane_ilac_guvenligi", acil=false (mild rash, breathing normal)
+M36: id="M36", kategori="fatura_odeme", birim="faturalama", acil=false
+M37: id="M37", kategori="randevu", birim="poliklinik_randevu", acil=false
+M38: id="M38", kategori="sonuc_sorgu", birim="laboratuvar", acil=false
+M39: id="M39", kategori="fatura_odeme", birim="faturalama", acil=false
+M40: id="M40", kategori="randevu", birim="poliklinik_randevu", acil=false
+
+Double check M25: "Eşim yeni başladığı ilaçtan sonra yatamaz oldu. Oturduğunda bile cümle ortasında soluk almak için duruyor, dudakları morarmış gibi görünüyor."
+- Category: Side effect ("ilaçtan sonra ... yan etkisi olabilir mi"). -> "ilac_yan_etki".
+- Acil: "soluk almak için duruyor" (difficulty breathing), "dudakları morarmış" (cyanosis). This is severe. -> true.
+
+Double check M17: "Babamın iş göremezlik raporu için belge talebinde bulunacaktım. Ancak öğle saatinden beri sözcükleri karıştırıyor, bizi tanımakta zorlanıyor ve elindeki bardağı düşürdü."
+- Category: Report request ("iş göremezlik raporu"). -> "rapor_belge_talebi".
+- Acil: "sözcükleri karıştırıyor, bizi tanımakta zorlanıyor" (confusion/disorientation). Matches criteria. -> true.
+
+Double check M09: "hastanın sabahtan beri uyandırılamadığını" (unresponsive). -> true.
+Double check M13: "yanımızdaki hasta bayıldı" (fainted). -> true.
+Double check M02: "göğsümde baskı gibi bir ağrı var ve nefes alırken zorlanıyorum". -> true.
+
+Looks consistent. I will generate the JSON now.
